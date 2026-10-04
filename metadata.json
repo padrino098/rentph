@@ -1,0 +1,6 @@
+{
+  "name": "RentPH - Student Housing & Rental Marketplace",
+  "description": "Student dormitories, bed spaces, rooms, apartments, and condominiums for rent across the Philippines. Find verified places near top universities, colleges, and workplaces.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
