@@ -16,35 +16,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    if (isRegister) {
-      if (!name.trim() || !email.trim()) {
-        setError('Please fill in all required fields.');
-        return;
-      }
-      try {
-        register(name.trim(), email.trim(), role);
-        onClose();
-      } catch (err: any) {
-        setError(err.message);
-      }
-    } else {
-      if (!email.trim()) {
-        setError('Please enter your email address.');
-        return;
-      }
-      const success = login(email.trim());
-      if (success) {
-        onClose();
+    try {
+      if (isRegister) {
+        await register(name.trim(), email.trim(), password, role);
       } else {
-        setError('No account found with this email. Try one of the demo accounts below or create an account.');
+        await login(email.trim(), password);
       }
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Authentication failed.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -55,12 +46,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-left">
+      <div role="dialog" aria-modal="true" aria-labelledby="auth-title" className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-left">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h3 className="font-serif text-lg text-slate-900">
+          <h3 id="auth-title" className="font-serif text-lg text-slate-900">
             {isRegister ? 'Join RentPH' : 'Welcome to RentPH'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+          <button onClick={onClose} aria-label="Close sign-in dialog" className="text-slate-400 hover:text-slate-700">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -112,7 +103,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {error && (
-          <div className="mb-4 p-2.5 rounded-lg bg-red-50 text-red-700 text-xs">
+          <div role="alert" className="mb-4 p-2.5 rounded-lg bg-red-50 text-red-700 text-xs">
             {error}
           </div>
         )}
@@ -120,8 +111,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           {isRegister && (
             <div>
-              <label className="text-[11px] font-semibold text-slate-600 block mb-1">Full Name</label>
+              <label htmlFor="auth-name" className="text-[11px] font-semibold text-slate-600 block mb-1">Full Name</label>
               <input
+                id="auth-name"
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -133,8 +125,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           )}
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-600 block mb-1">Email Address</label>
+            <label htmlFor="auth-email" className="text-[11px] font-semibold text-slate-600 block mb-1">Email Address</label>
             <input
+              id="auth-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -145,12 +138,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-600 block mb-1">Password</label>
+            <label htmlFor="auth-password" className="text-[11px] font-semibold text-slate-600 block mb-1">Password</label>
             <input
+              id="auth-password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
+              required
               className="w-full p-2 text-xs border rounded-lg focus:outline-none focus:border-slate-900"
             />
           </div>
@@ -192,9 +188,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full mt-2 py-2.5 bg-stone-900 text-white rounded-xl text-xs font-medium hover:bg-stone-800 transition-colors cursor-pointer"
           >
-            {isRegister ? 'Create Account' : 'Sign In'}
+            {isSubmitting ? 'Please wait…' : isRegister ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 

@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 function MarketplaceApp() {
-  const { currentUser } = useAuth();
+  const { currentUser, authError } = useAuth();
 
   // Navigation State
   const [currentView, setCurrentView] = useState<string>('explore');
@@ -82,6 +82,11 @@ function MarketplaceApp() {
   const { properties, total, totalPages } = store.getProperties(filters, currentPage, pageSize);
   const categories = store.getCategories();
   const amenities = store.getAmenities();
+  const propertyTypes = [...new Set(
+    store.getAllPropertiesForAdmin()
+      .filter(property => property.status === 'approved')
+      .map(property => property.propertyType)
+  )].sort();
   const schools = store.getSchools();
   const selectedSchool = schools.find(s => s.id === filters.schoolId);
 
@@ -143,6 +148,11 @@ function MarketplaceApp() {
 
       {/* Main Content Area */}
       <main className="flex-1">
+        {authError && (
+          <div role="alert" className="mx-auto max-w-7xl px-4 py-3 text-sm text-red-700">
+            {authError}
+          </div>
+        )}
         {/* VIEW: EXPLORE / HOME */}
         {currentView === 'explore' && (
           <div>
@@ -153,7 +163,6 @@ function MarketplaceApp() {
                 setFilters(prev => ({ ...prev, ...updated }));
                 setCurrentPage(1);
               }}
-              onOpenStudentMatcher={() => setIsStudentMatcherOpen(true)}
             />
 
             {/* Category Segmented Bar */}
@@ -287,7 +296,7 @@ function MarketplaceApp() {
               ) : displayMode === 'grid' ? (
                 /* Standard 4-column responsive grid */
                 <div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
                     {properties.map(property => (
                       <PropertyCard
                         key={property.id}
@@ -513,6 +522,7 @@ function MarketplaceApp() {
         onClose={() => setIsFilterModalOpen(false)}
         filters={filters}
         amenities={amenities}
+        propertyTypes={propertyTypes}
         onApply={updatedFilters => {
           setFilters(updatedFilters);
           setCurrentPage(1);

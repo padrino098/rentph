@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { Search, MapPin, GraduationCap, Users, X, Sparkles, Navigation } from 'lucide-react';
-import { SearchFilters, School } from '../../types';
+import { Search, MapPin } from 'lucide-react';
+import { SearchFilters } from '../../types';
 import { store } from '../../services/store';
+import { FilterSelect } from '../common/FilterSelect';
 
 interface HeroSearchProps {
   filters: SearchFilters;
   onSearch: (updated: Partial<SearchFilters>) => void;
-  onOpenStudentMatcher: () => void;
 }
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({
   filters,
   onSearch,
-  onOpenStudentMatcher,
 }) => {
   const schools = store.getSchools();
   const [location, setLocation] = useState(filters.location || '');
@@ -49,18 +48,6 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
 
   return (
     <div className="relative pt-8 pb-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-      {/* Student Guided Matcher Callout Banner */}
-      <div className="max-w-2xl mx-auto mb-5">
-        <button
-          onClick={onOpenStudentMatcher}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium hover:bg-amber-100 transition-colors shadow-xs cursor-pointer"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-          <span>Looking for college housing? Try the <strong>Student Housing Matcher</strong></span>
-          <span className="text-amber-700 font-bold ml-1">→</span>
-        </button>
-      </div>
-
       <div className="max-w-3xl mx-auto mb-6">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-slate-900 tracking-tight text-balance leading-tight">
           Find your next student dorm & rental on Rent<span className="text-amber-600 font-sans font-bold">PH</span>
@@ -70,111 +57,88 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
         </p>
       </div>
 
-      {/* Main Search Bar Module */}
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl sm:rounded-full shadow-md border border-slate-200/90 p-2 sm:p-2.5">
+      <div className="max-w-3xl mx-auto rounded-xl border border-slate-200 bg-white p-3 sm:p-4 shadow-xs">
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 text-left"
+          aria-label="Search rentals"
+          className="text-left"
         >
-          {/* Target Campus / University */}
-          <div className="px-4 py-2">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Campus / School
-            </label>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <select
-                value={selectedSchoolId}
-                onChange={e => setSelectedSchoolId(e.target.value)}
-                className="w-full text-xs font-medium text-slate-900 focus:outline-none bg-transparent"
-              >
-                <option value="">All Campuses / Cities</option>
-                {schools.map(s => (
-                  <option key={s.id} value={s.id}>
-                    Near {s.shortName} ({s.city})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Area / Barangay */}
-          <div className="px-4 py-2">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Location / Area
-            </label>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="e.g. España, Katipunan, BGC"
-                className="w-full text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none bg-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Max Distance */}
-          <div className="px-4 py-2">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              Max Distance
-            </label>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <Navigation className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <select
-                value={maxDistance || ''}
-                onChange={e => setMaxDistance(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full text-xs font-medium text-slate-900 focus:outline-none bg-transparent"
-              >
-                <option value="">Any distance</option>
-                <option value="0.5">Within 500m (5m walk)</option>
-                <option value="1.0">Within 1 km (12m walk)</option>
-                <option value="2.0">Within 2 km</option>
-                <option value="5.0">Within 5 km</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Max Budget & Submit Button */}
-          <div className="px-4 py-2 flex items-center justify-between gap-2">
-            <div className="flex-1">
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                Max Monthly Rent
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-2">
+            <div className="min-w-0">
+              <label htmlFor="rental-location" className="mb-1 block text-xs font-medium text-slate-600">
+                Location
               </label>
-              <select
-                value={maxPrice || ''}
-                onChange={e => setMaxPrice(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full text-xs font-medium text-slate-900 focus:outline-none bg-transparent mt-0.5"
-              >
-                <option value="">Any Budget</option>
-                <option value="4000">Up to ₱4,000</option>
-                <option value="6000">Up to ₱6,000</option>
-                <option value="8000">Up to ₱8,000</option>
-                <option value="12000">Up to ₱12,000</option>
-                <option value="20000">Up to ₱20,000</option>
-              </select>
+              <div className="relative">
+                <MapPin aria-hidden="true" className="pointer-events-none absolute left-2.5 top-3.5 h-4 w-4 text-slate-400" />
+                <input
+                  id="rental-location"
+                  type="text"
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  placeholder="City or area"
+                  className="h-11 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50/60 pl-8 pr-2.5 text-base sm:text-sm text-slate-900 placeholder:text-slate-500 focus:border-slate-500 focus:bg-white focus:outline-2 focus:outline-offset-2 focus:outline-slate-500"
+                />
+              </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              {hasActiveCriteria && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
-                  title="Clear search filters"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+            <FilterSelect
+              label="Monthly budget"
+              description="Choose your maximum monthly rent."
+              value={maxPrice?.toString() ?? ''}
+              onChange={value => setMaxPrice(value ? Number(value) : undefined)}
+              options={[
+                { value: '', label: 'Any budget' },
+                ...[4000, 6000, 8000, 12000, 20000].map(price => ({
+                  value: price.toString(),
+                  label: `Up to ₱${price.toLocaleString()}`,
+                })),
+              ]}
+            />
+            <FilterSelect
+              label="Near a campus"
+              description="Choose a campus to narrow your search."
+              value={selectedSchoolId}
+              onChange={setSelectedSchoolId}
+              options={[
+                { value: '', label: 'Any campus' },
+                ...schools.map(school => ({
+                  value: school.id,
+                  label: `${school.shortName} (${school.city})`,
+                })),
+              ]}
+            />
+            <FilterSelect
+              label="Max distance"
+              description="Choose the maximum distance from your selected campus."
+              value={maxDistance?.toString() ?? ''}
+              onChange={value => setMaxDistance(value ? Number(value) : undefined)}
+              options={[
+                { value: '', label: 'Any distance' },
+                { value: '0.5', label: 'Within 500 m' },
+                { value: '1', label: 'Within 1 km' },
+                { value: '2', label: 'Within 2 km' },
+                { value: '5', label: 'Within 5 km' },
+              ]}
+            />
+          </div>
 
+          <div className="mt-3 flex items-center justify-end gap-2">
+            {hasActiveCriteria && (
               <button
-                type="submit"
-                className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-all shrink-0 cursor-pointer shadow-xs"
+                type="button"
+                onClick={handleClear}
+                className="min-h-11 shrink-0 rounded-lg px-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 cursor-pointer"
               >
-                <Search className="w-4 h-4" />
+                Clear filters
               </button>
-            </div>
+            )}
+            <button
+              type="submit"
+              className="flex min-h-11 flex-1 sm:flex-none items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 cursor-pointer"
+            >
+              <Search aria-hidden="true" className="h-4 w-4 shrink-0" />
+              <span>Search rentals</span>
+            </button>
           </div>
         </form>
       </div>

@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: assertive
+  auto_review:
+    enabled: false
+    auto_incremental_review: false
+    drafts: false
+    description_keyword: ""
+    labels: []
+  path_filters:
+    - "!**/vendor/**"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.gradle/**"
+    - "!**/.env"
+    - "!**/.env.*"
+    - "!deploy.env"
+    - "!**/*.sqlite"
+    - "!**/*.log"
+  path_instructions:
+    - path: "src/**/*.{ts,tsx}"
+      instructions: |
+        Trace actions from the rendered UI to API calls and persistence.
+        Distinguish the PostgreSQL-backed auth session from local/demo properties,
+        applications, bookings, payments, messages, and administration.
+        Check error/loading states, stale async session restoration, logout
+        revocation, API envelopes, role mapping (owner -> host), and web versus
+        Capacitor URL resolution. Do not treat demo persona switching as real auth.
+        Report concrete functional failures and regression tests, not cosmetic advice.
+    - path: "backend/**/*.go"
+      instructions: |
+        Verify all /api/v1 auth endpoints against the frontend contract and real
+        PostgreSQL integration tests. Check idempotent schema initialization,
+        Laravel bcrypt and Sanctum token compatibility, token revocation, reset
+        expiry and one-time consumption, signed email verification, mail failures,
+        and consistent JSON responses. Do not claim that unit tests prove database
+        or SMTP connectivity.
+    - path: "**/*.{yml,yaml,ts}"
+      instructions: |
+        For deployment and build configuration, trace browser/native API URLs,
+        the Vite proxy, Nginx proxy, container ports, readiness, and environment
+        variables. Preserve the frontend and do not add mock marketplace endpoints.
+chat:
+  auto_reply: false

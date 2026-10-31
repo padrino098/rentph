@@ -191,7 +191,7 @@ export const PropertyWizardModal: React.FC<PropertyWizardModalProps> = ({
     }
   };
 
-  const handleSubmitForApproval = () => {
+  const handlePublish = () => {
     if (!validateCurrentStep()) return;
     try {
       const submitted = store.saveHostProperty(buildPropertyPayload(), true);
@@ -222,7 +222,7 @@ export const PropertyWizardModal: React.FC<PropertyWizardModalProps> = ({
               {currentStep === 7 && 'Availability & Stay Limits'}
               {currentStep === 8 && 'House Rules & Guest Etiquette'}
               {currentStep === 9 && 'Review Sanctuary Profile'}
-              {currentStep === 10 && 'Submit for Admin Curation'}
+              {currentStep === 10 && 'Publish Property'}
             </h3>
           </div>
           <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 cursor-pointer">
@@ -635,9 +635,9 @@ export const PropertyWizardModal: React.FC<PropertyWizardModalProps> = ({
           {currentStep === 10 && (
             <div className="text-center py-6 space-y-3">
               <Check className="w-12 h-12 text-emerald-600 mx-auto" />
-              <h4 className="font-serif text-lg text-stone-900">Ready for Curation Review</h4>
+              <h4 className="font-serif text-lg text-stone-900">Ready to Publish</h4>
               <p className="text-xs text-stone-500 max-w-md mx-auto">
-                By submitting, your listing enters the platform quality queue. Our curation team audits high-res photos and local verification before going live.
+                Publish your property now. It will appear in housing search immediately and you can edit its details at any time.
               </p>
             </div>
           )}
@@ -680,10 +680,10 @@ export const PropertyWizardModal: React.FC<PropertyWizardModalProps> = ({
             ) : (
               <button
                 type="button"
-                onClick={handleSubmitForApproval}
+                onClick={handlePublish}
                 className="px-6 py-2 rounded-lg bg-emerald-700 text-white text-xs font-medium hover:bg-emerald-800 shadow-sm cursor-pointer"
               >
-                Submit for Admin Approval
+                Publish Property
               </button>
             )}
           </div>

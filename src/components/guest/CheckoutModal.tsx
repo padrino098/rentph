@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Property, Booking, Payment } from '../../types';
 import { PricingEngine } from '../../services/pricingEngine';
 import { store } from '../../services/store';
+import { formatPhp } from '../../services/currency';
 import { useAuth } from '../../context/AuthContext';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { X, CreditCard, ShieldCheck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -126,7 +127,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-500">Total Paid:</span>
-                  <span className="font-semibold text-stone-900 tabular-nums">${confirmedBooking.payment.amount.toLocaleString()} USD</span>
+                  <span className="font-semibold text-stone-900 tabular-nums">{formatPhp(confirmedBooking.payment.amount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-500">Host:</span>
@@ -170,26 +171,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   Price Details
                 </div>
                 <div className="flex justify-between">
-                  <span>${pricing.nightlyRate} × {pricing.nights} nights</span>
-                  <span className="tabular-nums font-medium text-stone-900">${pricing.subtotal.toLocaleString()}</span>
+                  <span>{formatPhp(pricing.nightlyRate)} × {pricing.nights} nights</span>
+                  <span className="tabular-nums font-medium text-stone-900">{formatPhp(pricing.subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Cleaning fee</span>
-                  <span className="tabular-nums font-medium text-stone-900">${pricing.cleaningFee.toLocaleString()}</span>
+                  <span className="tabular-nums font-medium text-stone-900">{formatPhp(pricing.cleaningFee)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>RentPH service fee</span>
-                  <span className="tabular-nums font-medium text-stone-900">${pricing.serviceFee.toLocaleString()}</span>
+                  <span className="tabular-nums font-medium text-stone-900">{formatPhp(pricing.serviceFee)}</span>
                 </div>
                 {pricing.discount > 0 && (
                   <div className="flex justify-between text-emerald-700 font-medium">
                     <span>{pricing.discountDescription}</span>
-                    <span className="tabular-nums">-${pricing.discount.toLocaleString()}</span>
+                    <span className="tabular-nums">-{formatPhp(pricing.discount)}</span>
                   </div>
                 )}
                 <div className="pt-2 flex justify-between font-semibold text-sm text-stone-900 border-t border-stone-200">
-                  <span>Total (USD)</span>
-                  <span className="tabular-nums">${pricing.total.toLocaleString()}</span>
+                  <span>Total (PHP)</span>
+                  <span className="tabular-nums">{formatPhp(pricing.total)}</span>
                 </div>
               </div>
 
@@ -300,7 +301,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <span>Authorizing transaction with bank...</span>
                     </>
                   ) : (
-                    <span>Pay ${pricing.total.toLocaleString()} and Confirm Booking</span>
+                    <span>Pay {formatPhp(pricing.total)} and Confirm Booking</span>
                   )}
                 </button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-400 mt-2">

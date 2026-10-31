@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Booking, Property } from '../../types';
 import { store } from '../../services/store';
+import { formatPhp } from '../../services/currency';
 import { useAuth } from '../../context/AuthContext';
 import { ImageWithFallback } from '../common/ImageWithFallback';
 import { Calendar, MapPin, AlertCircle, Star, X, Check } from 'lucide-react';
@@ -177,7 +178,7 @@ export const TripsView: React.FC<TripsViewProps> = ({ onSelectProperty, onNaviga
                 <div className="text-left md:text-right">
                   <div className="text-[11px] text-stone-500">Total Paid</div>
                   <div className="text-base font-semibold text-stone-900 tabular-nums">
-                    ${b.total.toLocaleString()} USD
+                    {formatPhp(b.total)}
                   </div>
                 </div>
 

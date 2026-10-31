@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Property, User, Booking, AuditLog, PlatformSettings, UserStatus, UserRole } from '../../types';
 import { store } from '../../services/store';
+import { formatPhp } from '../../services/currency';
 import { useAuth } from '../../context/AuthContext';
-import { ImageWithFallback } from '../common/ImageWithFallback';
 import {
-  Shield, CheckCircle2, XCircle, AlertTriangle, Users,
+  Shield, Users,
   Home, DollarSign, Settings, FileText, Check, Ban, Eye
 } from 'lucide-react';
 
@@ -14,11 +14,7 @@ interface AdminConsoleProps {
 
 export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) => {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'moderation' | 'users' | 'bookings' | 'settings' | 'audit'>('overview');
-  
-  // Rejection modal
-  const [rejectingPropertyId, setRejectingPropertyId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'bookings' | 'settings' | 'audit'>('overview');
 
   // Settings form
   const [settings, setSettings] = useState<PlatformSettings>(store.getSettings());
@@ -29,26 +25,12 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
   const allBookings = store.getAllBookingsForAdmin();
   const auditLogs = store.getAuditLogs();
 
-  const pendingProperties = allProperties.filter(p => p.status === 'pending');
   const totalGMV = allBookings
     .filter(b => b.paymentStatus === 'paid' && b.status !== 'cancelled')
     .reduce((sum, b) => sum + b.total, 0);
   const platformRevenue = allBookings
     .filter(b => b.paymentStatus === 'paid' && b.status !== 'cancelled')
     .reduce((sum, b) => sum + b.serviceFee, 0);
-
-  const handleApprove = (propId: string) => {
-    store.updatePropertyModeration(propId, 'approved');
-  };
-
-  const handleReject = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rejectingPropertyId || !rejectionReason.trim()) return;
-
-    store.updatePropertyModeration(rejectingPropertyId, 'rejected', rejectionReason.trim());
-    setRejectingPropertyId(null);
-    setRejectionReason('');
-  };
 
   const handleToggleUserStatus = (userId: string, currentStatus: UserStatus) => {
     const nextStatus: UserStatus = currentStatus === 'active' ? 'suspended' : 'active';
@@ -78,26 +60,15 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
             </h1>
           </div>
           <p className="text-xs text-stone-500 mt-1">
-            Global oversight, property curation auditing, RBAC controls, and transaction integrity.
+            Global oversight, account access, platform configuration, and transaction integrity.
           </p>
         </div>
-
-        {pendingProperties.length > 0 && (
-          <button
-            onClick={() => setActiveTab('moderation')}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-medium cursor-pointer"
-          >
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <span>{pendingProperties.length} Properties Pending Curation</span>
-          </button>
-        )}
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto border-b border-stone-200 mb-8">
         {[
           { id: 'overview', label: 'Overview & Analytics', icon: Home },
-          { id: 'moderation', label: `Moderation Queue (${pendingProperties.length})`, icon: CheckCircle2 },
           { id: 'users', label: `Users & Roles (${allUsers.length})`, icon: Users },
           { id: 'bookings', label: `Bookings (${allBookings.length})`, icon: DollarSign },
           { id: 'settings', label: 'Platform Settings', icon: Settings },
@@ -128,7 +99,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
             <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
               <div className="text-xs text-stone-500 font-medium">Gross Marketplace Value (GMV)</div>
               <div className="text-2xl font-serif font-semibold text-stone-900 tabular-nums mt-1">
-                ${totalGMV.toLocaleString()}
+                {formatPhp(totalGMV)}
               </div>
               <div className="text-[11px] text-stone-400 mt-1">Total stay volume</div>
             </div>
@@ -136,13 +107,13 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
             <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
               <div className="text-xs text-stone-500 font-medium">Platform Fee Net Revenue</div>
               <div className="text-2xl font-serif font-semibold text-emerald-700 tabular-nums mt-1">
-                ${platformRevenue.toLocaleString()}
+                {formatPhp(platformRevenue)}
               </div>
               <div className="text-[11px] text-stone-400 mt-1">Based on {settings.serviceFeePercent}% service rate</div>
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
-              <div className="text-xs text-stone-500 font-medium">Total Sanctuaries</div>
+                <div className="text-xs text-stone-500 font-medium">Total Properties</div>
               <div className="text-2xl font-serif font-semibold text-stone-900 tabular-nums mt-1">
                 {allProperties.length}
               </div>
@@ -159,31 +130,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
           </div>
 
           {/* Quick Snapshot */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-6 bg-white rounded-2xl border border-stone-200">
-              <h3 className="font-semibold text-sm text-stone-900 mb-3">Pending Moderation Queue</h3>
-              {pendingProperties.length === 0 ? (
-                <div className="text-xs text-stone-400 py-4">No submissions pending curation.</div>
-              ) : (
-                <div className="space-y-3">
-                  {pendingProperties.map(p => (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200 text-xs">
-                      <div>
-                        <div className="font-semibold text-stone-900">{p.title}</div>
-                        <div className="text-[11px] text-stone-500">Host: {p.owner?.name} · {p.city}, {p.country}</div>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('moderation')}
-                        className="px-3 py-1 bg-stone-900 text-white rounded-lg text-xs"
-                      >
-                        Audit
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
+          <div className="grid grid-cols-1 gap-6">
             <div className="p-6 bg-white rounded-2xl border border-stone-200">
               <h3 className="font-semibold text-sm text-stone-900 mb-3">Recent Platform Events</h3>
               <div className="space-y-2.5 max-h-56 overflow-y-auto">
@@ -202,70 +149,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
         </div>
       )}
 
-      {/* TAB 2: MODERATION QUEUE */}
-      {activeTab === 'moderation' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-serif text-stone-900">
-              Sanctuaries Awaiting Platform Audit ({pendingProperties.length})
-            </h2>
-          </div>
-
-          {pendingProperties.length === 0 ? (
-            <div className="p-12 text-center bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-              <div className="font-medium text-stone-900">Queue is Clear</div>
-              <div>All submitted properties have been reviewed and decided.</div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {pendingProperties.map(p => (
-                <div key={p.id} className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs flex flex-col md:flex-row gap-5 items-start justify-between">
-                  <div className="flex gap-4">
-                    <div className="w-28 h-28 rounded-xl overflow-hidden bg-stone-100 shrink-0">
-                      <ImageWithFallback
-                        src={p.images[0]?.imageUrl}
-                        alt={p.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-semibold uppercase bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                        Pending Approval
-                      </span>
-                      <h3 className="font-serif font-semibold text-base text-stone-900">{p.title}</h3>
-                      <div className="text-xs text-stone-500">{p.address}, {p.city}, {p.country}</div>
-                      <div className="text-xs text-stone-600 pt-1">
-                        Landlord: <span className="font-medium">{p.owner?.name}</span> · ₱{p.monthlyRent?.toLocaleString()}/mo · {p.bedrooms} beds · {p.maxGuests} max occupants
-                      </div>
-                      <p className="text-xs text-stone-500 line-clamp-2 max-w-lg mt-1">
-                        {p.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-end gap-2 self-stretch md:self-auto border-t md:border-t-0 pt-3 md:pt-0">
-                    <button
-                      onClick={() => setRejectingPropertyId(p.id)}
-                      className="px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium cursor-pointer"
-                    >
-                      Reject with Note
-                    </button>
-                    <button
-                      onClick={() => handleApprove(p.id)}
-                      className="px-5 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-medium cursor-pointer"
-                    >
-                      Approve & Publish Live
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: USERS & ROLES */}
+      {/* TAB 2: USERS & ROLES */}
       {activeTab === 'users' && (
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
           <div className="p-4 border-b border-stone-100 flex items-center justify-between">
@@ -335,7 +219,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
         </div>
       )}
 
-      {/* TAB 4: BOOKINGS */}
+      {/* TAB 3: BOOKINGS */}
       {activeTab === 'bookings' && (
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
@@ -359,7 +243,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
                     <td className="p-3.5 text-stone-700">{b.renter?.name}</td>
                     <td className="p-3.5 text-stone-600">{b.checkIn} → {b.checkOut}</td>
                     <td className="p-3.5 font-medium text-stone-900 tabular-nums">
-                      ${b.total.toLocaleString()} <span className="text-stone-400 text-[11px]">(${b.serviceFee})</span>
+                      {formatPhp(b.total)} <span className="text-stone-400 text-[11px]">({formatPhp(b.serviceFee)})</span>
                     </td>
                     <td className="p-3.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
@@ -391,7 +275,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
         </div>
       )}
 
-      {/* TAB 5: PLATFORM SETTINGS */}
+      {/* TAB 4: PLATFORM SETTINGS */}
       {activeTab === 'settings' && (
         <div className="max-w-xl bg-white rounded-2xl border border-stone-200 p-6 shadow-xs">
           <h3 className="font-serif text-lg text-stone-900 mb-4">Platform Fee & Booking Config</h3>
@@ -455,7 +339,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
         </div>
       )}
 
-      {/* TAB 6: AUDIT TRAIL */}
+      {/* TAB 5: AUDIT TRAIL */}
       {activeTab === 'audit' && (
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
           <div className="p-4 border-b border-stone-100 flex items-center justify-between">
@@ -485,42 +369,6 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onSelectProperty }) 
         </div>
       )}
 
-      {/* Rejection Note Modal */}
-      {rejectingPropertyId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
-            <h3 className="font-semibold text-stone-900 text-sm mb-2">Reject Sanctuary Submission</h3>
-            <p className="text-xs text-stone-500 mb-4">
-              Provide actionable feedback to the host on what needs to be improved (photo quality, permits, description clarity).
-            </p>
-            <form onSubmit={handleReject} className="space-y-4">
-              <textarea
-                value={rejectionReason}
-                onChange={e => setRejectionReason(e.target.value)}
-                placeholder="e.g. Please provide higher resolution photos of the primary suite and bathroom..."
-                rows={3}
-                required
-                className="w-full p-2.5 text-xs border rounded-xl focus:outline-none focus:border-stone-900"
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRejectingPropertyId(null)}
-                  className="px-4 py-2 text-xs text-stone-600 hover:bg-stone-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  Confirm Rejection
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
