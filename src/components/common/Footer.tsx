@@ -103,7 +103,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <Globe className="w-3.5 h-3.5 text-stone-500" />
               <span>English (PH)</span>
               <span className="text-stone-300">·</span>
-              <span className="font-medium">₱ PHP / $ USD</span>
+              <span className="font-medium">₱ PHP</span>
             </div>
           </div>
         </div>

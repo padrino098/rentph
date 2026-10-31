@@ -50,6 +50,17 @@ class AppStore {
       if (stored) {
         const parsed = JSON.parse(stored) as DatabaseSchema;
         if (parsed.properties && parsed.users && parsed.schools) {
+          const legacyPending = parsed.properties.some(property => property.status === 'pending');
+          if (legacyPending) {
+            const publishedAt = new Date().toISOString();
+            parsed.properties = parsed.properties.map(property =>
+              property.status === 'pending'
+                ? { ...property, status: 'approved', publishedAt: property.publishedAt || publishedAt }
+                : property
+            );
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+          }
+
           return parsed;
         }
       }
@@ -135,6 +146,18 @@ class AppStore {
       this.data.currentUserId = userId;
       this.notify();
     }
+  }
+
+  public setSessionUser(user: User): void {
+    const index = this.data.users.findIndex(existing => existing.id === user.id);
+    if (index === -1) {
+      this.data.users.push(user);
+    } else {
+      this.data.users[index] = user;
+    }
+
+    this.data.currentUserId = user.id;
+    this.notify();
   }
 
   public getUsers(): User[] {
@@ -637,7 +660,7 @@ class AppStore {
 
   public saveHostProperty(
     propertyData: Partial<Property>,
-    submitForApproval = false
+    publishNow = false
   ): Property {
     const currentUser = this.getCurrentUser();
     if (currentUser.role !== 'host' && currentUser.role !== 'admin') {
@@ -660,12 +683,12 @@ class AppStore {
         throw new Error('Forbidden: You can only edit your own properties.');
       }
 
+      const existingProperty = this.data.properties[idx];
       prop = {
-        ...this.data.properties[idx],
+        ...existingProperty,
         ...propertyData,
-        status: submitForApproval
-          ? 'pending'
-          : propertyData.status || this.data.properties[idx].status,
+        status: publishNow ? 'approved' : propertyData.status || existingProperty.status,
+        publishedAt: publishNow ? existingProperty.publishedAt || now : existingProperty.publishedAt,
         updatedAt: now,
       };
       this.data.properties[idx] = prop;
@@ -703,7 +726,7 @@ class AppStore {
         utilityEstimate: propertyData.utilityEstimate || 600,
         cleaningFee: propertyData.cleaningFee || 250,
         serviceFeePercent: this.data.settings.serviceFeePercent,
-        status: submitForApproval ? 'pending' : 'draft',
+        status: publishNow ? 'approved' : 'draft',
         featured: false,
         amenities: propertyData.amenities || ['amenity-wifi', 'amenity-study'],
         images: propertyData.images || [],
@@ -719,6 +742,7 @@ class AppStore {
         rooms: propertyData.rooms || [],
         totalBedsCount: propertyData.totalBedsCount || 8,
         availableBedsCount: propertyData.availableBedsCount || 8,
+        publishedAt: publishNow ? now : undefined,
         createdAt: now,
         updatedAt: now,
       };
@@ -729,49 +753,16 @@ class AppStore {
       currentUser.id,
       currentUser.name,
       currentUser.role,
-      submitForApproval
-        ? 'PROPERTY_SUBMITTED_FOR_APPROVAL'
+      publishNow
+        ? 'PROPERTY_PUBLISHED'
         : 'PROPERTY_SAVED_DRAFT',
       'property',
       prop.id,
-      `Property "${prop.title}" ${submitForApproval ? 'submitted for admin curation review.' : 'saved as draft.'}`
+      `Property "${prop.title}" ${publishNow ? 'published immediately by its owner.' : 'saved as draft.'}`
     );
 
     this.notify();
     return prop;
-  }
-
-  public updatePropertyModeration(
-    propertyId: string,
-    status: 'approved' | 'rejected' | 'suspended',
-    rejectionReason?: string
-  ): boolean {
-    const admin = this.getCurrentUser();
-    if (admin.role !== 'admin')
-      throw new Error('Unauthorized: Admin access required.');
-
-    const prop = this.data.properties.find(p => p.id === propertyId);
-    if (!prop) return false;
-
-    prop.status = status;
-    prop.rejectionReason = rejectionReason;
-    prop.updatedAt = new Date().toISOString();
-    if (status === 'approved' && !prop.publishedAt) {
-      prop.publishedAt = new Date().toISOString();
-    }
-
-    this.logAudit(
-      admin.id,
-      admin.name,
-      admin.role,
-      `PROPERTY_MODERATION_${status.toUpperCase()}`,
-      'property',
-      propertyId,
-      `Moderator status set to: ${status}. ${rejectionReason ? `Reason: ${rejectionReason}` : ''}`
-    );
-
-    this.notify();
-    return true;
   }
 
   // ===================== AVAILABILITY & BLOCKED DATES =====================

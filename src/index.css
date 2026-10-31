@@ -34,3 +34,84 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+.leaflet-container {
+  z-index: 0;
+  color: #0f172a;
+  font-family: var(--font-sans);
+}
+
+.rentph-price-icon,
+.rentph-school-icon {
+  background: transparent;
+  border: 0;
+}
+
+.rentph-price-pin {
+  display: inline-flex;
+  min-width: 66px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 22%);
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: transform 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.rentph-price-pin.is-hovered {
+  transform: scale(1.08);
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #fff;
+}
+
+.rentph-price-pin.is-active {
+  transform: scale(1.1);
+  background: #d97706;
+  border-color: #fff;
+  color: #fff;
+  outline: 2px solid #d97706;
+}
+
+.rentph-price-pin__dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.rentph-school-pin {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 8px;
+  background: #0f172a;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 30%);
+  color: #fbbf24;
+  font-size: 14px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+}
+
+.rentph-school-pin span {
+  transform: rotate(45deg);
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+}

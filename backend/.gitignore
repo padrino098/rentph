@@ -1,0 +1,16 @@
+*.log
+*.exe
+.DS_Store
+.env
+.env.*
+!.env.example
+.vscode/
+.phpunit.result.cache
+/.phpunit.cache/
+/coverage.out
+/rentph-api
+/database/database.sqlite
+/bootstrap/cache/*.php
+/vendor/
+/storage/
+/.github/

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { SearchFilters, Amenity } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { SearchFilters, Amenity, PropertyType } from '../../types';
 import { X, Check } from 'lucide-react';
 
 interface FilterModalProps {
@@ -7,6 +7,7 @@ interface FilterModalProps {
   onClose: () => void;
   filters: SearchFilters;
   amenities: Amenity[];
+  propertyTypes: PropertyType[];
   onApply: (filters: SearchFilters) => void;
   onReset: () => void;
 }
@@ -16,6 +17,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   onClose,
   filters,
   amenities,
+  propertyTypes,
   onApply,
   onReset,
 }) => {
@@ -26,6 +28,18 @@ export const FilterModal: React.FC<FilterModalProps> = ({
   const [bathrooms, setBathrooms] = useState<number | undefined>(filters.bathrooms);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(filters.amenities || []);
   const [sortBy, setSortBy] = useState<SearchFilters['sortBy']>(filters.sortBy || 'recommended');
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setMinPrice(filters.minPrice);
+    setMaxPrice(filters.maxPrice);
+    setPropertyType(filters.propertyType || 'all');
+    setBedrooms(filters.bedrooms);
+    setBathrooms(filters.bathrooms);
+    setSelectedAmenities(filters.amenities || []);
+    setSortBy(filters.sortBy || 'recommended');
+  }, [filters, isOpen]);
 
   if (!isOpen) return null;
 
@@ -111,17 +125,17 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {/* Price Range */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
-              Price Range Per Night ($ USD)
+              Monthly Rent Range (PHP)
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="text-[11px] text-stone-500">Minimum</span>
                 <div className="relative mt-1">
-                  <span className="absolute left-3 top-2 text-stone-400 text-xs">$</span>
+                  <span className="absolute left-3 top-2 text-stone-400 text-xs">₱</span>
                   <input
                     type="number"
                     min="0"
-                    step="50"
+                    step="100"
                     placeholder="0"
                     value={minPrice ?? ''}
                     onChange={e => setMinPrice(e.target.value ? Number(e.target.value) : undefined)}
@@ -132,12 +146,12 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <div>
                 <span className="text-[11px] text-stone-500">Maximum</span>
                 <div className="relative mt-1">
-                  <span className="absolute left-3 top-2 text-stone-400 text-xs">$</span>
+                  <span className="absolute left-3 top-2 text-stone-400 text-xs">₱</span>
                   <input
                     type="number"
-                    min="100"
-                    step="50"
-                    placeholder="2000+"
+                    min="0"
+                    step="100"
+                    placeholder="20000"
                     value={maxPrice ?? ''}
                     onChange={e => setMaxPrice(e.target.value ? Number(e.target.value) : undefined)}
                     className="w-full pl-7 pr-3 py-1.5 text-xs rounded-lg border border-stone-300 focus:outline-none focus:border-stone-900"
@@ -152,21 +166,27 @@ export const FilterModal: React.FC<FilterModalProps> = ({
           {/* Property Type */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-stone-500 mb-2">
-              Property Architecture
+              Property Type
             </label>
             <div className="flex flex-wrap gap-2">
-              {['all', 'villa', 'chalet', 'sanctuary', 'loft', 'cabin'].map(type => (
+              {[
+                { value: 'all' as const, label: 'Any Type' },
+                ...propertyTypes.map(type => ({
+                  value: type,
+                  label: type.replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase()),
+                })),
+              ].map(type => (
                 <button
-                  key={type}
+                  key={type.value}
                   type="button"
-                  onClick={() => setPropertyType(type)}
+                  onClick={() => setPropertyType(type.value)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg border capitalize transition-colors ${
-                    propertyType === type
+                    propertyType === type.value
                       ? 'border-stone-900 bg-stone-900 text-white'
                       : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300'
                   }`}
                 >
-                  {type === 'all' ? 'Any Type' : type}
+                  {type.label}
                 </button>
               ))}
             </div>
